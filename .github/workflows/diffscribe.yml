@@ -1,0 +1,33 @@
+name: DiffScribe — Auto-fill PR Description
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+# Required so DiffScribe can update the PR body and post comments.
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  diffscribe:
+    name: Auto-fill PR Description
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Ballerina
+        uses: ballerina-platform/setup-ballerina@v1
+        with:
+          version: 2201.10.0
+
+      - name: Run DiffScribe
+        # Exits 0 even on non-critical errors so the PR check is never blocked.
+        run: bal run main.bal || echo "DiffScribe encountered an error but will not block the PR."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BODY: ${{ github.event.pull_request.body }}
