@@ -39,7 +39,12 @@ func main() {
 		return
 	}
 
-	log.Println("PR description is unfilled. Fetching diff...")
+	log.Println("PR description is unfilled. Posting notice comment...")
+	if err := postUnfilledNotice(repository, prNumber, token); err != nil {
+		log.Printf("Warning: failed to post unfilled notice: %v", err)
+	}
+
+	log.Println("Fetching diff...")
 
 	diff, err := fetchPrDiff(repository, prNumber, token)
 	if err != nil {
@@ -218,11 +223,28 @@ func updatePrBody(repo, prNum, body, token string) error {
 	return nil
 }
 
+// postUnfilledNotice posts a comment as soon as an unfilled template is detected,
+// informing the author that DiffScribe will fill the description automatically.
+func postUnfilledNotice(repo, prNum, token string) error {
+	commentBody := `### ⚠️ PR Template Not Filled Out
+
+This PR description template has **not been filled out**.
+
+**DiffScribe** has detected that the description still contains unfilled placeholders. It will now automatically analyse the code diff and fill in the PR description.
+
+> ⏳ Please wait — DiffScribe is processing the diff and will update the PR description shortly.
+
+---
+*Powered by [DiffScribe](https://github.com/DiffScribe) using GitHub Models (gpt-4o-mini)*`
+
+	return postIssueComment(repo, prNum, token, commentBody)
+}
+
 // postComment posts a comment on the PR informing the author that DiffScribe filled the description.
 func postComment(repo, prNum, token string) error {
-	commentBody := `### 🤖 DiffScribe Auto-filled PR Description
+	commentBody := `### ✅ DiffScribe — PR Description Auto-filled
 
-This PR description was automatically filled by **DiffScribe** based on the code diff.
+**DiffScribe** has automatically filled the PR description based on the code diff.
 
 Please review each section and:
 - Correct anything that was inferred incorrectly
@@ -232,7 +254,12 @@ Please review each section and:
 ---
 *Powered by [DiffScribe](https://github.com/DiffScribe) using GitHub Models (gpt-4o-mini)*`
 
-	reqBody := map[string]string{"body": commentBody}
+	return postIssueComment(repo, prNum, token, commentBody)
+}
+
+// postIssueComment is the shared helper that POSTs a comment body to the GitHub issues comments API.
+func postIssueComment(repo, prNum, token, body string) error {
+	reqBody := map[string]string{"body": body}
 	bodyBytes, err := json.Marshal(reqBody)
 	if err != nil {
 		return err
