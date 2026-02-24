@@ -44,14 +44,17 @@ func main() {
 		log.Printf("Warning: failed to post unfilled notice: %v", err)
 	}
 
-	log.Println("Fetching diff...")
+	log.Println("Fetching PR diff...")
 
 	diff, err := fetchPrDiff(repository, prNumber, token)
 	if err != nil {
 		log.Fatalf("Failed to fetch PR diff: %v", err)
 	}
+	log.Printf("Fetched diff: %d chars", len(diff))
+
 	if len(diff) > maxDiffSize {
 		diff = diff[:maxDiffSize] + "\n\n... (diff truncated to fit context window)"
+		log.Printf("Diff truncated to %d chars", maxDiffSize)
 	}
 
 	log.Println("Calling GitHub Models API (gpt-4o-mini) to fill PR description...")
@@ -59,7 +62,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to generate description: %v", err)
 	}
+	if strings.TrimSpace(filledDescription) == "" {
+		log.Fatal("GitHub Models returned an empty description; skipping update")
+	}
+	log.Printf("Description generated: %d chars", len(filledDescription))
 
+	log.Println("Updating PR body...")
 	if err := updatePrBody(repository, prNumber, filledDescription, token); err != nil {
 		log.Fatalf("Failed to update PR body: %v", err)
 	}

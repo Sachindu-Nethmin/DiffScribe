@@ -9,6 +9,7 @@ permissions:
   pull-requests: write
   issues: write
   contents: read
+  models: read
 
 jobs:
   diffscribe:
@@ -25,8 +26,11 @@ jobs:
           go-version: '1.21'
 
       - name: Run DiffScribe
-        # Exits 0 even on non-critical errors so the PR check is never blocked.
-        run: go run main.go || echo "DiffScribe encountered an error but will not block the PR."
+        # Non-critical errors are surfaced as a warning annotation so the PR check is never blocked.
+        run: |
+          if ! go run main.go; then
+            echo "::warning::DiffScribe failed to auto-fill the PR description. Check the step logs above for details."
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
