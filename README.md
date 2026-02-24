@@ -1,6 +1,6 @@
 # DiffScribe
 
-> A GitHub Action that automatically fills PR description templates using AI — powered by GitHub Models and written in Go.
+A GitHub Action that automatically fills PR description templates using AI — powered by GitHub Models and written in Go.
 
 ## How It Works
 
