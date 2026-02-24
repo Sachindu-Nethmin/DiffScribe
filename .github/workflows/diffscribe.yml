@@ -7,6 +7,7 @@ on:
 # Required so DiffScribe can update the PR body and post comments.
 permissions:
   pull-requests: write
+  issues: write
   contents: read
 
 jobs:
@@ -18,14 +19,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Ballerina
-        uses: ballerina-platform/setup-ballerina@v1
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
-          version: 2201.10.0
+          go-version: '1.21'
 
       - name: Run DiffScribe
         # Exits 0 even on non-critical errors so the PR check is never blocked.
-        run: bal run main.bal || echo "DiffScribe encountered an error but will not block the PR."
+        run: go run main.go || echo "DiffScribe encountered an error but will not block the PR."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}

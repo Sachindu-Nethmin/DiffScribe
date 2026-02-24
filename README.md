@@ -1,6 +1,6 @@
 # DiffScribe
 
-> A GitHub Action that automatically fills PR description templates using AI — powered by GitHub Models and written in Ballerina.
+> A GitHub Action that automatically fills PR description templates using AI — powered by GitHub Models and written in Go.
 
 ## How It Works
 
@@ -67,8 +67,8 @@ DiffScribe/
 │   ├── workflows/
 │   │   └── diffscribe.yml          ← GitHub Action workflow
 │   └── pull_request_template.md   ← Sample PR template
-├── main.bal                        ← Ballerina core logic
-├── Ballerina.toml                  ← Ballerina project config
+├── main.go                         ← Go core logic
+├── go.mod                          ← Go module config
 └── README.md
 ```
 
@@ -89,7 +89,7 @@ DiffScribe/
 
 ## Tech Stack
 
-- **Ballerina** — core script language
+- **Go** — core script language
 - **GitHub Models** (`gpt-4o-mini`) — AI inference (free with GitHub account)
 - **GitHub Actions** — CI/CD runner
 - **GitHub REST API** — fetch diff, update PR body, post comments
