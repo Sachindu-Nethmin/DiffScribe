@@ -132,6 +132,11 @@ DiffScribe/
 - **GitHub Actions** — CI/CD runner
 - **GitHub REST API** — fetch diff, update PR body, post comments
 
+## Review turnaround
+
+Pull requests to this repository are reviewed **within one day**. That is a commitment by
+the maintainer, not a measurement of past PRs.
+
 ## License
 
 [MIT](LICENSE) © Sachindu Nethmin
