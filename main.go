@@ -15,6 +15,7 @@ const (
 	githubAPIBase            = "https://api.github.com"
 	githubModelsBase         = "https://models.inference.ai.azure.com"
 	maxDiffSize              = 8000
+	defaultTemplatePath      = ".github/pull_request_template.md"
 	unfilledCommentThreshold = 3
 )
 
@@ -28,9 +29,16 @@ func main() {
 		log.Fatal("Required environment variables (GITHUB_TOKEN, GITHUB_REPOSITORY, PR_NUMBER) are not set.")
 	}
 
-	templateBytes, err := os.ReadFile(".github/pull_request_template.md")
+	// Consumers of the published action can point this at their own template; the
+	// default keeps the behaviour every existing workflow already relies on.
+	templatePath := os.Getenv("TEMPLATE_PATH")
+	if templatePath == "" {
+		templatePath = defaultTemplatePath
+	}
+
+	templateBytes, err := os.ReadFile(templatePath)
 	if err != nil {
-		log.Fatalf("Failed to read PR template: %v", err)
+		log.Fatalf("Failed to read PR template %q: %v", templatePath, err)
 	}
 	template := string(templateBytes)
 
