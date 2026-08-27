@@ -1,0 +1,65 @@
+name: 'DiffScribe'
+description: 'Fills an unfilled pull request description from the diff, using GitHub Models.'
+author: 'Sachindu Nethmin'
+
+branding:
+  icon: 'edit-3'
+  color: 'blue'
+
+inputs:
+  github-token:
+    description: >-
+      Token used to read the diff and write the PR body. The default GITHUB_TOKEN works,
+      but the job must grant `pull-requests: write`, `issues: write` and `models: read`.
+    required: false
+    default: ${{ github.token }}
+  pr-number:
+    description: 'Pull request to fill. Defaults to the PR that triggered the workflow.'
+    required: false
+    default: ${{ github.event.pull_request.number }}
+  pr-body:
+    description: >-
+      Current PR body. DiffScribe leaves the PR alone unless this still looks like an
+      unfilled template. Defaults to the body of the triggering PR.
+    required: false
+    default: ${{ github.event.pull_request.body }}
+  template-path:
+    description: 'Path to the PR template, relative to the checked-out repository.'
+    required: false
+    default: '.github/pull_request_template.md'
+  go-version:
+    description: 'Go toolchain used to build DiffScribe.'
+    required: false
+    default: '1.21'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ inputs.go-version }}
+
+    # Built from the action's own checkout, then run from the caller's workspace: the
+    # program reads the template and writes the PR of the repository being built, not
+    # of DiffScribe itself.
+    - name: Build DiffScribe
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: go build -o "${{ runner.temp }}/diffscribe" .
+
+    - name: Fill PR description
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+        PR_BODY: ${{ inputs.pr-body }}
+        TEMPLATE_PATH: ${{ inputs.template-path }}
+      # A failure here is never worth blocking the PR check over, so it degrades to a
+      # warning annotation instead of a red X.
+      run: |
+        if ! "${{ runner.temp }}/diffscribe"; then
+          echo "::warning::DiffScribe could not auto-fill the PR description. See the step log above."
+        fi

@@ -30,6 +30,44 @@ Call GitHub Models gpt-4o-mini
 Patch PR body + post review comment
 ```
 
+## Use it in your own repository
+
+DiffScribe is packaged as a composite action, so another repo can consume it in one step:
+
+```yaml
+name: Auto-fill PR Description
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+permissions:
+  pull-requests: write
+  issues: write
+  contents: read
+  models: read
+
+jobs:
+  diffscribe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Sachindu-Nethmin/DiffScribe@v1
+```
+
+The `permissions` block is not optional: without `models: read` the inference call fails,
+and without `pull-requests: write` the PR body cannot be updated.
+
+### Inputs
+
+| Input | Default | Description |
+|---|---|---|
+| `github-token` | `${{ github.token }}` | Token for the GitHub API and GitHub Models |
+| `pr-number` | the triggering PR | Pull request to fill |
+| `pr-body` | the triggering PR's body | Current description; DiffScribe skips a PR whose description is already filled |
+| `template-path` | `.github/pull_request_template.md` | Path to your PR template |
+| `go-version` | `1.21` | Go toolchain used to build DiffScribe |
+
 ## Setup
 
 ### 1. Copy the workflow file
@@ -93,3 +131,12 @@ DiffScribe/
 - **GitHub Models** (`gpt-4o-mini`) — AI inference (free with GitHub account)
 - **GitHub Actions** — CI/CD runner
 - **GitHub REST API** — fetch diff, update PR body, post comments
+
+## Review turnaround
+
+Pull requests to this repository are reviewed **within one day**. That is a commitment by
+the maintainer, not a measurement of past PRs.
+
+## License
+
+[MIT](LICENSE) © Sachindu Nethmin
